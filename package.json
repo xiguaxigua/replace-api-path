@@ -1,0 +1,23 @@
+{
+  "name": "replace-api-path",
+  "version": "0.0.4",
+  "description": "根据定义好的url生成一份修改打包文件路径的shell脚本",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xiguaxigua/replace-api-path.git"
+  },
+  "bin": {
+    "replace-path": "./index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/xiguaxigua/replace-api-path/issues"
+  },
+  "homepage": "https://github.com/xiguaxigua/replace-api-path#readme"
+}
