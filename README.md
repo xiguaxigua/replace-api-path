@@ -7,7 +7,7 @@
 ### 参数
 `./node_modules/.bin/replace-path s=source-path d=dist-path`
 
-s url-map文件的路径 可选 默认为 '/src/common/urls.js'
+s url-map文件的路径 可选 默认为 '/config/urls.js'
 
 d shell脚本生成目录 可选 默认为 '/dist'
 

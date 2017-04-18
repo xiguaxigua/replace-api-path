@@ -1,12 +1,16 @@
 #!/usr/bin/env node
-
-var argv = process.argv.slice(2)
-
-let sourceFilePath = getParam(argv, 's') || '/src/common/urls.js'
-let distFilePath = getParam(argv, 'd') || '/dist'
-
-const urls = require(process.cwd() + sourceFilePath).URL_MAP
+const path = require('path')
 const fs = require('fs')
+const argv = process.argv.slice(2)
+
+const sourceFilePath = getParam(argv, 's') || './config/urls.js'
+const distFilePath = getParam(argv, 'd') || './dist/'
+const disablePerf = getParam(argv, 'p') || false
+
+const alphaPerf = 'http:\\/\\/perf.alpha.elenet.me'
+const prodPerf = 'https:\\/\\/perf.ele.me'
+
+const urls = require(path.resolve(sourceFilePath)).URL_MAP
 
 Object.keys(urls).forEach(env => {
   Object.keys(urls[env]).forEach(key => {
@@ -28,11 +32,15 @@ if (urls.prod) {
     }
   })
 
-  prodShTpl.push('" `find * -type f | grep -E "\.js$"`')
+  prodShTpl.push('" `find * -type f | grep -E "\.js$"`\n')
 
-  fs.writeFile(process.cwd() + distFilePath + '/install_production.sh', prodShTpl.join(''), function (e) {
-    if (e) console.log(e)
-  })
+  if (!disablePerf) {
+    prodShTpl.push('  sed -i "')
+    prodShTpl.push(`s/${alphaPerf}/${prodPerf}`)
+    prodShTpl.push('" `find * -type f | grep -E "\.html$"`\n')
+  }
+
+  writeFile(distFilePath + 'install_production.sh', prodShTpl.join(''))
 
   delete urls.prod
 }
@@ -56,9 +64,7 @@ if (Object.keys(urls).length > 1) {
 
   testShTpl.push('fi')
 
-  fs.writeFile(process.cwd() + distFilePath + '/install_testing.sh', testShTpl.join(''), function (e) {
-    if (e) console.log(e)
-  })
+  writeFile(distFilePath + 'install_testing.sh', testShTpl.join(''))
 }
 
 function getParam (argv, label) {
@@ -73,3 +79,6 @@ function getParam (argv, label) {
   return result
 }
 
+function writeFile (targetPath, data) {
+  fs.writeFile(path.resolve(targetPath), data, function (e) { if (e) console.log(e) })
+}
