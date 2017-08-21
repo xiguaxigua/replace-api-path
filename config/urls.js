@@ -1,10 +1,8 @@
 const URL_MAP = {
   alpha: {
-    SSO: 'alpha-sso',
     API_PREFIX: 'alpha-httpizza'
   },
   beta: {
-    SSO: 'beta-sso',
     API_PREFIX: 'beta-httpizza'
   },
   prod: {

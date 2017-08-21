@@ -34,17 +34,19 @@ if (urls.prod) {
   const prodShTpl = ['#!/bin/bash\n']
   const prodSSO = urls.prod.SSO
   const prodApiPrefix = urls.prod.API_PREFIX
+  if (prodSSO || prodApiPrefix) {
 
-  prodShTpl.push('sed -i "')
+    prodShTpl.push('sed -i "')
+    
+    Object.keys(urls).forEach(env => {
+      if (env !== 'prod') {
+        if (prodSSO) prodShTpl.push(`s/${urls[env].SSO}/${prodSSO}/g;`)
+        if (prodApiPrefix) prodShTpl.push(`s/${urls[env].API_PREFIX}/${prodApiPrefix}/g;`)
+        }
+      })
 
-  Object.keys(urls).forEach(env => {
-    if (env !== 'prod') {
-      if (prodSSO) prodShTpl.push(`s/${urls[env].SSO}/${prodSSO}/g;`)
-      if (prodApiPrefix) prodShTpl.push(`s/${urls[env].API_PREFIX}/${prodApiPrefix}/g;`)
-    }
-  })
-
-  prodShTpl.push('" `find * -type f | grep -E "\.js$"`\n')
+    prodShTpl.push('" `find * -type f | grep -E "\.js$"`\n')
+  }
 
   if (prodReplace && prodReplace.length) {
     prodReplace.forEach(item => {
@@ -66,18 +68,20 @@ if (Object.keys(urls).length >= 1) {
     const testSSO = urls[env].SSO
     const testApiPrefix = urls[env].API_PREFIX
 
-    testShTpl.push(!testShTpl[1] ? 'if' : 'elif')
-    testShTpl.push(` [ "$ENV" = "${env}" ]; then\n`)
-    testShTpl.push(`  sed -i "`)
+    if (testSSO || testApiPrefix) {
+      testShTpl.push(!testShTpl[1] ? 'if' : 'elif')
+      testShTpl.push(` [ "$ENV" = "${env}" ]; then\n`)
+      testShTpl.push(`  sed -i "`)
 
-    Object.keys(urls).forEach(innerEnv => {
-      if (env !== innerEnv) {
-        if (testSSO) testShTpl.push(`s/${urls[innerEnv].SSO}/${testSSO}/g;`)
-        if (testApiPrefix) testShTpl.push(`s/${urls[innerEnv].API_PREFIX}/${testApiPrefix}/g;`)
-      }
-    })
+      Object.keys(urls).forEach(innerEnv => {
+        if (env !== innerEnv) {
+          if (testSSO) testShTpl.push(`s/${urls[innerEnv].SSO}/${testSSO}/g;`)
+          if (testApiPrefix) testShTpl.push(`s/${urls[innerEnv].API_PREFIX}/${testApiPrefix}/g;`)
+        }
+      })
 
-    testShTpl.push('" `find * -type f | grep -E "\.js$"`\n')
+      testShTpl.push('" `find * -type f | grep -E "\.js$"`\n')
+    }
   })
 
   testShTpl.push('fi\n')
