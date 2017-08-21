@@ -5,17 +5,29 @@ const argv = process.argv.slice(2)
 
 const sourceFilePath = getParam(argv, 's') || './config/urls.js'
 const distFilePath = getParam(argv, 'd') || './dist/'
-const disablePerf = getParam(argv, 'p') || false
 
-const alphaPerf = 'http:\\/\\/perf.alpha.elenet.me'
-const prodPerf = 'https:\\/\\/perf.ele.me'
+const settings = require(path.resolve(sourceFilePath))
 
-const urls = require(path.resolve(sourceFilePath)).URL_MAP
-
+const urls = settings.URL_MAP
+const prodReplace = settings.prodReplace
+const testReplace = settings.testReplace
+// escape '/'
 Object.keys(urls).forEach(env => {
   Object.keys(urls[env]).forEach(key => {
     urls[env][key] = urls[env][key].replace(/\//g, '\\/')
   })
+})
+
+const replaceTmp = [prodReplace, testReplace]
+replaceTmp.forEach(options => {
+  if (options && options.length) {
+    options.forEach(item => {
+      if (item) {
+        item.from = item.from.replace(/\//g, '\\/')
+        item.to = item.to.replace(/\//g, '\\/')
+      }
+    })
+  }
 })
 
 if (urls.prod) {
@@ -23,46 +35,60 @@ if (urls.prod) {
   const prodSSO = urls.prod.SSO
   const prodApiPrefix = urls.prod.API_PREFIX
 
-  prodShTpl.push('  sed -i "')
+  prodShTpl.push('sed -i "')
 
   Object.keys(urls).forEach(env => {
     if (env !== 'prod') {
-      prodShTpl.push(`s/${urls[env].SSO}/${prodSSO};`)
-      prodShTpl.push(`s/${urls[env].API_PREFIX}/${prodApiPrefix};`)
+      if (prodSSO) prodShTpl.push(`s/${urls[env].SSO}/${prodSSO}/g;`)
+      if (prodApiPrefix) prodShTpl.push(`s/${urls[env].API_PREFIX}/${prodApiPrefix}/g;`)
     }
   })
 
   prodShTpl.push('" `find * -type f | grep -E "\.js$"`\n')
 
-  if (!disablePerf) {
-    prodShTpl.push('  sed -i "')
-    prodShTpl.push(`s/${alphaPerf}/${prodPerf}`)
-    prodShTpl.push('" `find * -type f | grep -E "\.html$"`\n')
+  if (prodReplace && prodReplace.length) {
+    prodReplace.forEach(item => {
+      prodShTpl.push('sed -i "')
+      prodShTpl.push(`s/${item.from}/${item.to}/g`)
+      prodShTpl.push(`" \`find * -type f | grep -E "\.${item.type}$"\`\n`)
+    })
   }
 
   writeFile(distFilePath + 'install_production.sh', prodShTpl.join(''))
 
   delete urls.prod
 }
-if (Object.keys(urls).length > 1) {
-  const testShTpl = ['#!/bin/bash\n']
 
+if (Object.keys(urls).length >= 1) {
+  const testShTpl = ['#!/bin/bash\n']
+  
   Object.keys(urls).forEach(env => {
+    const testSSO = urls[env].SSO
+    const testApiPrefix = urls[env].API_PREFIX
+
     testShTpl.push(!testShTpl[1] ? 'if' : 'elif')
     testShTpl.push(` [ "$ENV" = "${env}" ]; then\n`)
     testShTpl.push(`  sed -i "`)
 
     Object.keys(urls).forEach(innerEnv => {
       if (env !== innerEnv) {
-        testShTpl.push(`s/${urls[innerEnv].SSO}/${urls[env].SSO}/g;`)
-        testShTpl.push(`s/${urls[innerEnv].API_PREFIX}/${urls[env].API_PREFIX}/g;`)
+        if (testSSO) testShTpl.push(`s/${urls[innerEnv].SSO}/${testSSO}/g;`)
+        if (testApiPrefix) testShTpl.push(`s/${urls[innerEnv].API_PREFIX}/${testApiPrefix}/g;`)
       }
     })
 
     testShTpl.push('" `find * -type f | grep -E "\.js$"`\n')
   })
 
-  testShTpl.push('fi')
+  testShTpl.push('fi\n')
+
+  if (testReplace && testReplace.length) {
+    testReplace.forEach(item => {
+      testShTpl.push('sed -i "')
+      testShTpl.push(`s/${item.from}/${item.to}/g`)
+      testShTpl.push(`" \`find * -type f | grep -E "\.${item.type}$"\`\n`)
+    })
+  }
 
   writeFile(distFilePath + 'install_testing.sh', testShTpl.join(''))
 }

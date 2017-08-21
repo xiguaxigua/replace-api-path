@@ -30,7 +30,31 @@ const URL_MAP = {
 const CURRENT_ENV = 'alpha'
 const SSO = URL_MAP[CURRENT_ENV].SSO
 const API_PREFIX = URL_MAP[CURRENT_ENV].API_PREFIX
+const prodReplace = [
+  {
+    from: 'a.com',
+    to: 'b.com',
+    type: 'html'
+  },
+  {
+    from: 'e.com',
+    to: 'f.com',
+    type: 'html'
+  }
+]
+const testReplace = [
+  {
+    from: 'c.com',
+    to: 'd.com',
+    type: 'html'
+  },
+  {
+    from: 'g.com',
+    to: 'h.com',
+    type: 'js'
+  }
+]
 
-module.exports = { SSO, API_PREFIX, URL_MAP }
+module.exports = { SSO, API_PREFIX, URL_MAP, prodReplace, testReplace }
 ```
 URL_MAP中的`prod`对应的是production环境，其余的对应faas的测试环境
